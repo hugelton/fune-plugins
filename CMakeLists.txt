@@ -1,0 +1,17 @@
+# Fune plugins: every folder with a <name>/<name>.c is built as a desktop plugin (a shared library) against Fune's SDK.
+cmake_minimum_required(VERSION 3.16)
+project(fune_plugins C)
+set(FUNE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." CACHE PATH "a Fune checkout (its sdk/ and src/)")
+if(NOT EXISTS "${FUNE_DIR}/sdk/kreisel_sdk.h")
+  message(FATAL_ERROR "FUNE_DIR=${FUNE_DIR} is not a Fune checkout (no sdk/kreisel_sdk.h)")
+endif()
+file(GLOB _dirs LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/*")
+foreach(_d ${_dirs})
+  get_filename_component(_n "${_d}" NAME)
+  if(IS_DIRECTORY "${_d}" AND EXISTS "${_d}/${_n}.c")
+    add_library(fune_plugin_${_n} MODULE "${_d}/${_n}.c")
+    target_include_directories(fune_plugin_${_n} PRIVATE "${FUNE_DIR}/sdk" "${FUNE_DIR}/src" "${_d}")
+    set_target_properties(fune_plugin_${_n} PROPERTIES PREFIX "" OUTPUT_NAME ${_n} C_VISIBILITY_PRESET hidden
+                          LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins")
+  endif()
+endforeach()
