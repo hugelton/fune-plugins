@@ -8,7 +8,9 @@ MPL-2.0; a plugin here may be MPL-2.0, MIT or GPL-3.0-or-later, as its folder sa
 
 | Plugin | Kind | Licence | Devices |
 | --- | --- | --- | --- |
-| (coming: Ensemble, Vector, E.Piano, Macro, Mini, Acid) | | | |
+| [Ensemble](ensemble/) | synth: divide-down strings with a chorus | MPL-2.0 | all (FM-1 too) |
+| [Vector](vector/) | synth: four wavetables mixed by X / Y | MPL-2.0 | all (FM-1 too) |
+| (coming: E.Piano, Macro, Mini, Acid) | | | |
 
 ## Building
 
