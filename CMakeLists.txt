@@ -12,6 +12,6 @@ foreach(_d ${_dirs})
     add_library(funeplug_${_n} MODULE "${_d}/${_n}.c")
     target_include_directories(funeplug_${_n} PRIVATE "${FUNE_DIR}/sdk" "${FUNE_DIR}/src" "${_d}")
     set_target_properties(funeplug_${_n} PROPERTIES PREFIX "" OUTPUT_NAME ${_n} C_VISIBILITY_PRESET hidden
-                          LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins")
+                          LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/plugins")
   endif()
 endforeach()
