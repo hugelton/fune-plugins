@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# MINI's table generator (not part of the plugin's build): writes ../../mini_int_tables.h from CA-72's own laws, taking CA-72
+# (https://github.com/idlefoundry/ca-72, GPL-3.0-or-later, Idle Foundry) at the commit the tables were made from.
+#   cargo run --release --manifest-path plugins/mini/tools/mini_gen/Cargo.toml > plugins/mini/mini_int_tables.h
+[package]
+name = "mini_gen"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+ca72 = { git = "https://github.com/idlefoundry/ca-72", rev = "88a6b2358c78e0e5d7a6e6ca9a70041ab985f15a" }

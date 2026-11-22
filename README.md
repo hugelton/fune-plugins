@@ -11,7 +11,9 @@ MPL-2.0; a plugin here may be MPL-2.0, MIT or GPL-3.0-or-later, as its folder sa
 | [Ensemble](ensemble/) | synth: divide-down strings with a chorus | MPL-2.0 | all (FM-1 too) |
 | [Vector](vector/) | synth: four wavetables mixed by X / Y | MPL-2.0 | all (FM-1 too) |
 | [E.Piano](epiano/) | synth: an electric piano (two-operator tines, bark, tremolo) | MPL-2.0 | all (FM-1 too) |
-| (coming: Macro, Mini, Acid) | | | |
+| [Macro](macro/) | synth: eight synthesis models after Mutable Instruments Plaits | MIT (after Plaits, MIT) | all (FM-1 too; Wave and Harm cost about twice a Retro voice) |
+| [Mini](mini/) | synth: a three-oscillator mono synth of the early 1970s, drawn as its panel | GPL-3.0-or-later (based on CA-72 by Idle Foundry) | all (FM-1 too) |
+| [Acid](acid/) | synth: a mono bass line with accent and slide | MIT (based on Open303 by Robin Schmidt) | all (FM-1 too) |
 
 ## Building
 
