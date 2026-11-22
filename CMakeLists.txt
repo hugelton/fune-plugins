@@ -9,9 +9,9 @@ file(GLOB _dirs LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/*")
 foreach(_d ${_dirs})
   get_filename_component(_n "${_d}" NAME)
   if(IS_DIRECTORY "${_d}" AND EXISTS "${_d}/${_n}.c")
-    add_library(fune_plugin_${_n} MODULE "${_d}/${_n}.c")
-    target_include_directories(fune_plugin_${_n} PRIVATE "${FUNE_DIR}/sdk" "${FUNE_DIR}/src" "${_d}")
-    set_target_properties(fune_plugin_${_n} PROPERTIES PREFIX "" OUTPUT_NAME ${_n} C_VISIBILITY_PRESET hidden
+    add_library(funeplug_${_n} MODULE "${_d}/${_n}.c")
+    target_include_directories(funeplug_${_n} PRIVATE "${FUNE_DIR}/sdk" "${FUNE_DIR}/src" "${_d}")
+    set_target_properties(funeplug_${_n} PROPERTIES PREFIX "" OUTPUT_NAME ${_n} C_VISIBILITY_PRESET hidden
                           LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins")
   endif()
 endforeach()
