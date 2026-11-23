@@ -209,14 +209,17 @@ static const KEngine MINI_DESC = {
 
 /* ------------------------------------------------------------------ the panel --- */
 /* The screens: the panel is a picture under the host's knobs (the first widget of each table: drawn first). The picture draws the
- * wood, the panel, the sections, and under each knob a white skirt and a black cap; the host draws the knob's ring, its value's arc
- * (lit for the row the knobs hold), the label and the value over it. The two switches (KTRK, MOD) are rockers in the picture, the
+ * wood, the panel, the sections; the host draws each knob as an instrument's (K_ST_SKIRT: a cream skirt with its dial, a black cap,
+ * one pointer, its rim lit for the row the knobs hold), its label and its value. The two switches (KTRK, MOD) are rockers in the picture, the
  * host's widget there a label alone. Three tables:
  *   SQUARE (the FM-1, 240 x 240): SOUND's three rows of four, EDIT's two, a cheek at each side; no room for the sections' names
  *     beside a label, a knob and a value in 15-pixel type, so the panel's seams part the sections;
  *   SMALL (the Zero, the handhelds, ~320 x 170): two rows;
  *   LARGE (a desktop, the web): the sections side by side under their names, SOUND's twelve in a row, EDIT's eight under it. */
-#define KN(k, x, y, w, h) {K_W_KNOB, 0, k, x, y, w, h, 0}
+#ifndef K_ST_SKIRT
+#define K_ST_SKIRT 64   /* (interface 1.8: the host draws an instrument's knob; an older host its plain knob) */
+#endif
+#define KN(k, x, y, w, h) {K_W_KNOB, K_ST_SKIRT, k, x, y, w, h, 0}
 #define SW(k, x, y, w, h) {K_W_VALUE, K_ST_NOVALUE, k, x, y, w, h, 0}
 #define PIC(id, w, h) {K_W_PICTURE, K_ST_FLAT, id, 0, 0, w, h, 0}
 static const KWidget SQ_SOUND[] = {
@@ -270,37 +273,25 @@ static void mini_attach(const KHostApi *h)
     part_mem = h && h->size >= offsetof(KHostApi, part_mem) + sizeof h->part_mem ? h->part_mem : 0;   /* (an older host: none) */
 }
 
-/* The colours: a host that draws a picture's own colours (KDraw version 2) gets the instrument's (walnut, a near-black panel, white
- * skirts, black caps); an older host the theme's. */
+/* The colours: a host that draws a picture's own colours (KDraw version 2) gets the instrument's (walnut, a near-black panel); an
+ * older host the theme's. */
 #ifndef K_COL_RGB
 #define K_COL_RGB(r, g, b) (0x1000000 | ((r) << 16) | ((g) << 8) | (b))
 #endif
-typedef struct { int wood, grain, edge, panel, seam, ink, skirt, cap, rock, rockon; } Pal;
+typedef struct { int wood, grain, edge, panel, seam, ink, rock, rockon; } Pal;
 static Pal palette(const KDraw *g)
 {
     Pal c;
     if (g->version >= 2) {
         c.wood = K_COL_RGB(96, 56, 30); c.grain = K_COL_RGB(72, 40, 20); c.edge = K_COL_RGB(140, 92, 54);
         c.panel = K_COL_RGB(26, 26, 28); c.seam = K_COL_RGB(70, 70, 74); c.ink = K_COL_RGB(222, 218, 204);
-        c.skirt = K_COL_RGB(206, 204, 196); c.cap = K_COL_RGB(14, 14, 16); c.rock = K_COL_RGB(44, 44, 48);
+        c.rock = K_COL_RGB(44, 44, 48);
         c.rockon = K_COL_RGB(222, 218, 204);
     } else {
         c.wood = K_COL_FAINT; c.grain = K_COL_LINE; c.edge = K_COL_MID; c.panel = K_COL_BG; c.seam = K_COL_LINE;
-        c.ink = K_COL_MID; c.skirt = K_COL_MID; c.cap = K_COL_BG; c.rock = K_COL_FAINT; c.rockon = K_COL_TEXT;
+        c.ink = K_COL_MID; c.rock = K_COL_FAINT; c.rockon = K_COL_TEXT;
     }
     return c;
-}
-static int isqrt(int v) { int r = 0; while ((r + 1) * (r + 1) <= v) r++; return r; }
-/* a disc of horizontal bands (a few calls: a picture has a budget) */
-static void disc(const KDraw *g, int cx, int cy, int r, int col)
-{
-    const int nb = r >= 16 ? 13 : r >= 11 ? 9 : r >= 7 ? 7 : 5;
-    int k;
-    for (k = 0; k < nb; k++) {
-        const int y0 = cy - r + k * (2 * r + 1) / nb, y1 = cy - r + (k + 1) * (2 * r + 1) / nb, ym = (y0 + y1) / 2 - cy;
-        const int hw = isqrt(r * r - ym * ym);
-        g->fill(g, cx - hw, y0, 2 * hw + 1, y1 - y0, col);
-    }
 }
 /* where the host puts a knob in a widget's cells (plug_widget: the label's line over it, the value's under), in the picture's frame */
 typedef struct { int cx, cy, r, x0, x1, vy; } Spot;
@@ -374,11 +365,10 @@ static void mini_draw(const KDraw *g, int id, const int16_t *val, int n)
             g->text(g, g->w / 2 - tw / 2, y + h / 2 - g->text_h / 2, "Mini", c.ink);
         }
     }
-    for (k = 1; k < L->n; k++) {   /* under each knob a white skirt and a black cap (the host's ring on their edge); the switches */
+    for (k = 1; k < L->n; k++) {   /* the switches: rockers (the knobs are the host's) */
         const KWidget *w = &L->w[k];
         const Spot s = spot(g, L, w);
         if (w->param == 15 || w->param == 18) rockers(g, &c, &s, w->param, val[w->param]);
-        else if (s.r >= 5) { disc(g, s.cx, s.cy, s.r + 3, c.skirt); disc(g, s.cx, s.cy, s.r * 5 / 8, c.cap); }
     }
 }
 
