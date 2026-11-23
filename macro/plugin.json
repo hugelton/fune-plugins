@@ -2,7 +2,7 @@
   "id": "macr",
   "name": "Macro",
   "long_name": "Macro oscillator",
-  "version": 1,
+  "version": 2,
   "kind": "synth",
   "license": "MIT",
   "author": "Leo Kuroshita (Hügelton Instruments)",
@@ -18,8 +18,8 @@
     "zero"
   ],
   "fm1_note": {
-    "en": "Wave and Harm cost about twice a Retro voice",
-    "ja": "Wave と Harm は Retro の声の約2倍の重さ"
+    "en": "Wave plays 4 voices, Harm 5 (each costs about twice a Retro voice)",
+    "ja": "Wave は 4 声、Harm は 5 声（どちらも Retro の声の約 2 倍の重さ）"
   },
   "tags": [
     "macro",

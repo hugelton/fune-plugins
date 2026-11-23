@@ -132,6 +132,29 @@ static void mc_draw(const KDraw *g, int id, const int16_t *val, int n)
     }
 }
 
+#if K_PLUGIN_EXT_VERSION >= 4
+/* (interface 1.9) the voices a part plays: the heavy models fewer where the device has little time. MC_WEIGHT: each model's voice in
+ * % of a Retro voice (the plugin's `cost`, 20 us), counted on fm1-emu 0.4.0 (dev/emu_cost.py, the gate open; 2026-11-23): a held
+ * key of Wave adds 130 k instructions a 256-frame block, of Harm 103 k, of Retro 55 k. A track may take what six voices of Chord
+ * take (MC_ROOM, the heaviest model that keeps all six on the FM-1: ~560 k): there Wave plays 4 (~545 k), Harm 5 (~555 k), the
+ * others 6. A device with the time (a desktop's 2000 us) or that says none (0) is not capped */
+static const uint16_t MC_WEIGHT[M_COUNT] = {113, 110, 148, 90, 188, 237, 170, 96};
+#define MC_ROOM 170u
+static uint8_t mc_voices(const void *part)
+{
+    const track_t *t = (const track_t *)part;
+    const uint32_t cost = mc_host ? mc_host->cost : 0u, nv = mc_host ? mc_host->voices : 0u;
+    uint32_t n;
+    if (!cost || !nv) return 0;
+    n = cost * MC_ROOM / (MC_COST * MC_WEIGHT[clamp(t->p[P_E0 + E_MODL], 0, M_COUNT - 1)]);
+    return n >= nv ? 0 : (uint8_t)(n ? n : 1u);
+}
+#endif
+
 static const KPluginExt MC_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, mc_attach, MC_LAYOUTS,
                                   (uint8_t)(sizeof MC_LAYOUTS / sizeof MC_LAYOUTS[0]), mc_draw,
-                                  MC_PRESETS, (uint8_t)(sizeof MC_PRESETS / sizeof MC_PRESETS[0])};
+                                  MC_PRESETS, (uint8_t)(sizeof MC_PRESETS / sizeof MC_PRESETS[0])
+#if K_PLUGIN_EXT_VERSION >= 4
+                                  , 0, mc_voices
+#endif
+};

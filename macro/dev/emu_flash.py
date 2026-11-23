@@ -13,7 +13,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "platforms/fm1hw/fm1_plugin.py").exists())   # (Fune's tree: the plugin is its submodule)
 spec = importlib.util.spec_from_file_location("fm1_plugin", ROOT / "platforms/fm1hw/fm1_plugin.py")
 fp = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fp)

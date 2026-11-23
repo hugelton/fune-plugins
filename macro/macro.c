@@ -997,9 +997,10 @@ static const KEngine MC_DESC = {
     .gate = 1,
 };
 
+#define MC_COST 20u   /* us a voice a block on the FM-1 (KPlugin.cost): the light models'; the heavy ones play fewer (mc_voices) */
 #include "macro_ui.c"
 
-static const KPlugin MACRO = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &MC_DESC, &MC_DSP,
-                              FS, 0, 20, 0, 0, &MC_EXT};   /* (its state: the voices' and the part's memory) */
+static const KPlugin MACRO = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &MC_DESC, &MC_DSP,
+                              FS, 0, MC_COST, 0, 0, &MC_EXT};   /* (its state: the voices' and the part's memory) */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &MACRO; }

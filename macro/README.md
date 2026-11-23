@@ -38,8 +38,28 @@ The AUX outputs are not played.
 
 ## Sizes and cost
 
-`python3 tools/kpl_build.py plugins/macro/macro.c`: see the session report and `memos/2026-11-22_macro_plugin.md` for the
-figures (the .kpl, RAM, the FM-1's instructions a block per model).
+`python3 tools/kpl_build.py extern/fune-plugins/macro/macro.c` (in Fune's tree): the .kpl, its RAM (Fune's
+`memos/2026-11-22_macro_plugin.md`).
+
+The FM-1's time, counted on fm1-emu 0.4.0 (`dev/emu_cost.py`; instructions, not cycles; the gate open, the worst case;
+2026-11-23). Keys held on track 1, instructions a 256-frame block (5.8 ms) they add:
+
+| Model | 5 voices | a voice | vs Retro | voices on the FM-1 |
+| --- | --- | --- | --- | --- |
+| Pair | 309 k | 62 k | 1.13 | 6 |
+| Fold | 302 k | 60 k | 1.10 | 6 |
+| FM | 406 k | 81 k | 1.48 | 6 |
+| Grain | 246 k | 49 k | 0.90 | 6 |
+| Harm | 554 k | 103 k (4 voices 451 k) | 1.88 | 5 |
+| Wave | 675 k | 130 k (4 voices 545 k) | 2.37 | 4 |
+| Chord | 467 k | 93 k | 1.70 | 6 |
+| Noise | 263 k | 53 k | 0.96 | 6 |
+| (Retro) | 274 k | 55 k | 1.00 | 6 |
+
+`KPlugin.cost` says 20 us, a Retro voice. The heavy models play fewer voices where the device has little time (interface 1.9,
+`KPluginExt.voices`, `mc_voices` in `macro_ui.c`): a track may take what six voices of Chord take (~560 k, the heaviest model that
+keeps all six), so Wave plays 4 (~545 k) and Harm 5 (~555 k) on the FM-1; six Wave voices would be ~805 k. Turned to Wave with six
+keys held, two are let go at once. A desktop, the web and the Zero (2000 us) keep every voice.
 
 ## Dev tools (`dev/`, not part of the plugin)
 

@@ -8,9 +8,10 @@
 kreisel.bin: the FM-1 app built with KREISEL_FM1_BOOTCHECK=0 (for the emulator only). flash_<m>.bin: emu_flash.py's flash with a
 build of Macro whose defaults are model m and DCAY 127 (the gate open: the voices sound the whole time, the worst case): no knob
 is turned in the emulator (a page key pressed twice opens its tools). Each run: SCL (SYNTH), ALGORITHM to the last engine
-(Macro), six keys held from HOLD0 to HOLD1 ms; a silent run is the same without the keys. --retro: the first engine (Retro, as
-it starts), the same keys, for a reference. The figure: the ISR instructions per 256-frame block the six voices add, and a
-voice's share; WORKDIR/<model>.bmp the screen while it plays."""
+(Macro), six keys held from HOLD0 to HOLD1 ms (five voices sound: fm1-emu 0.4.0 plays the sixth key not, a fifth and a sixth key held
+cost the same, 2026-11-23); a silent run is the same without the keys. --retro: the first engine (Retro, as
+it starts), the same keys, for a reference. The figure: the ISR instructions per 256-frame block the keys add, and a
+voice's share (of SOUNDING); WORKDIR/<model>.bmp the screen while it plays."""
 import re
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from pathlib import Path
 MODELS = ["Pair", "Fold", "FM", "Grain", "Harm", "Wave", "Chord", "Noise"]
 RUN, HOLD0, HOLD1 = 5200, 2600, 4800
 BLOCKS_A_S = 44100 / 256
+SOUNDING = 5   # (the voices the six keys sound)
 
 
 def keys(play, engine_steps=16):
@@ -59,13 +61,13 @@ def main():
     with ThreadPoolExecutor(max_workers=4) as ex:
         res = dict(zip([j[0] for j in jobs], ex.map(lambda j: run(emu, binf, j[1], work, j[2], j[3]), jobs)))
     silent = res["silent"][0]
-    print(f"{'':14s} M ISR/s   six voices k instr / block   a voice k / block")
+    print(f"{'':14s} M ISR/s   six keys k instr / block   a voice k / block")
     print(f"{'(silent)':14s} {silent:7.1f}")
     for name in MODELS + (["Retro"] if "--retro" in sys.argv else []):
         base = res["Retro silent"][0] if name == "Retro" else silent
         v, bmp = res[name]
         pb = per_block(base, v)
-        print(f"{name:14s} {v:7.1f}   {pb / 1000:10.0f}                  {pb / 6000:8.1f}")
+        print(f"{name:14s} {v:7.1f}   {pb / 1000:10.0f}                {pb / SOUNDING / 1000:8.1f}")
         if bmp.exists():
             (Path(work) / f"{name.lower()}.bmp").write_bytes(bmp.read_bytes())
 
