@@ -220,8 +220,19 @@ static void vec_draw(const KDraw *g, int id, const int16_t *v, int n)
     }
 }
 
+/* its factory presets (interface 1.5): plain names; P.A .. P.D the corners' waves (P.: its own value, as the host's A D S R are ENV 1) */
+static const KPreset PRESETS[] = {
+    {"Glass Pad", "X=40 Y=90 MOVE=40 SPRD=30 RATE=18 P.A=SINE P.B=GLASS P.C=BELL P.D=STRING A=60 D=50 S=90 R=70"},
+    {"Vox Drift", "X=64 Y=64 MOVE=70 SPRD=20 RATE=12 P.A=VOX P.B=SINE P.C=STRING P.D=TRI A=45 D=50 S=85 R=60"},
+    {"Saw Wedge", "X=100 Y=30 MOVE=10 SPRD=50 RATE=40 P.A=SAW P.B=SAW P.C=PULSE P.D=TRI A=5 D=40 S=80 R=30"},
+    {"Bell Turn", "X=20 Y=110 MOVE=55 SPRD=15 RATE=30 P.A=BELL P.B=GLASS P.C=SINE P.D=VOX A=2 D=70 S=30 R=60"},
+    {"String Sweep", "X=10 Y=64 MOVE=90 SPRD=35 RATE=8 P.A=STRING P.B=VOX P.C=SAW P.D=SINE A=55 D=50 S=90 R=75"},
+    {"Pulse Pluck", "X=90 Y=90 MOVE=0 SPRD=10 RATE=32 P.A=PULSE P.B=TRI P.C=BELL P.D=SAW A=0 D=35 S=20 R=25"},
+};
+
 static const KPluginExt VEC_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, vec_attach, LAYOUTS,
-                                   (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), vec_draw, 0, 0};
+                                   (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), vec_draw, PRESETS,
+                                   (uint8_t)(sizeof PRESETS / sizeof PRESETS[0])};
 static const KPlugin VECTOR = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &VEC_DESC, &VEC_DSP,
                                FS, 0, 8, 0, 0, &VEC_EXT};   /* its own state is the part's memory (engine_t.mem); ~8 us a voice */
 

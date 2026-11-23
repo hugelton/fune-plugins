@@ -201,6 +201,8 @@ static const KPreset PRESETS[] = {
     {"Cellos", "BASS=60 CELLO=110 VIOLA=40 VLN=0 TONE=70 A=30 D=50 S=90 R=50"},
     {"Brass Str", "BRASS=90 VLN=60 TONE=100 A=15 D=50 S=80 R=35"},
     {"Bright", "BASS=0 CELLO=30 VIOLA=90 VLN=120 TONE=120 HPF=30 A=25 D=50 S=90 R=45"},
+    {"Slow Swell", "BASS=40 CELLO=80 VIOLA=80 VLN=60 TONE=60 A=90 D=60 S=100 R=90"},
+    {"Dark Choir", "BASS=80 CELLO=90 VIOLA=30 VLN=0 BRASS=20 TONE=40 A=50 D=50 S=95 R=80"},
 };
 
 /* The screens. Picture 0: the registers, a string machine's tabs (16' 8' 8' 4' and the brass), each as tall as its value, the
