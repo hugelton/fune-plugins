@@ -1,0 +1,24 @@
+{
+  "id": "kens",
+  "name": "Ensemble",
+  "long_name": "Ensemble strings",
+  "version": 1,
+  "kind": "synth",
+  "license": "MPL-2.0",
+  "author": "Leo Kuroshita (Hügelton Instruments)",
+  "summary": {
+    "en": "Divide-down strings with a three-tap chorus",
+    "ja": "分周式ストリングスと3タップのコーラス"
+  },
+  "source": "ensemble.c",
+  "devices": [
+    "fm1",
+    "desktop",
+    "zero"
+  ],
+  "tags": [
+    "strings",
+    "pad",
+    "poly"
+  ]
+}

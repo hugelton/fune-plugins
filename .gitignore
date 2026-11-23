@@ -1,2 +1,4 @@
 build/
 .DS_Store
+# the plugin catalog: built by tools/catalog.py, committed once it is first published (signed with the real key)
+catalog/

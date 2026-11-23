@@ -1,0 +1,24 @@
+{
+  "id": "kvec",
+  "name": "Vector",
+  "long_name": "Vector wavetables",
+  "version": 1,
+  "kind": "synth",
+  "license": "MPL-2.0",
+  "author": "Leo Kuroshita (Hügelton Instruments)",
+  "summary": {
+    "en": "Four wavetables at the corners of a square, mixed by X and Y",
+    "ja": "四隅の4つのウェーブテーブルをXとYで混ぜる"
+  },
+  "source": "vector.c",
+  "devices": [
+    "fm1",
+    "desktop",
+    "zero"
+  ],
+  "tags": [
+    "wavetable",
+    "pad",
+    "poly"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "mini",
+  "name": "Mini",
+  "long_name": "Mini three-oscillator synth",
+  "version": 2,
+  "kind": "synth",
+  "license": "GPL-3.0-or-later",
+  "author": "Leo Kuroshita (Hügelton Instruments)",
+  "credits": "Based on CA-72 by Idle Foundry (GPL-3.0-or-later)",
+  "summary": {
+    "en": "A three-oscillator mono synth of the early 1970s, drawn as its panel",
+    "ja": "1970年代初めの3オシレーター・モノシンセ。パネルの姿で"
+  },
+  "source": "mini.c",
+  "devices": [
+    "fm1",
+    "desktop",
+    "zero"
+  ],
+  "tags": [
+    "mono",
+    "bass",
+    "lead"
+  ]
+}

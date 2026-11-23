@@ -1,0 +1,29 @@
+{
+  "id": "macr",
+  "name": "Macro",
+  "long_name": "Macro oscillator",
+  "version": 1,
+  "kind": "synth",
+  "license": "MIT",
+  "author": "Leo Kuroshita (Hügelton Instruments)",
+  "credits": "After Mutable Instruments Plaits by Emilie Gillet (MIT)",
+  "summary": {
+    "en": "Eight synthesis models in one voice, after Plaits",
+    "ja": "8つの合成モデルを1つの声で。Plaits に倣って"
+  },
+  "source": "macro.c",
+  "devices": [
+    "fm1",
+    "desktop",
+    "zero"
+  ],
+  "fm1_note": {
+    "en": "Wave and Harm cost about twice a Retro voice",
+    "ja": "Wave と Harm は Retro の声の約2倍の重さ"
+  },
+  "tags": [
+    "macro",
+    "poly",
+    "percussion"
+  ]
+}
