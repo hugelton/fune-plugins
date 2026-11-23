@@ -233,7 +233,7 @@ static const KPreset PRESETS[] = {
 static const KPluginExt VEC_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, vec_attach, LAYOUTS,
                                    (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), vec_draw, PRESETS,
                                    (uint8_t)(sizeof PRESETS / sizeof PRESETS[0])};
-static const KPlugin VECTOR = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &VEC_DESC, &VEC_DSP,
+static const KPlugin VECTOR = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &VEC_DESC, &VEC_DSP,
                                FS, 0, 8, 0, 0, &VEC_EXT};   /* its own state is the part's memory (engine_t.mem); ~8 us a voice */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &VECTOR; }

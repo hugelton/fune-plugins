@@ -290,7 +290,7 @@ static void ens_draw(const KDraw *g, int id, const int16_t *v, int n)
 static const KPluginExt ENS_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, ens_attach, LAYOUTS,
                                    (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), ens_draw, PRESETS,
                                    (uint8_t)(sizeof PRESETS / sizeof PRESETS[0])};
-static const KPlugin ENSEMBLE = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &ENS_DESC, &ENS_DSP,
+static const KPlugin ENSEMBLE = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &ENS_DESC, &ENS_DSP,
                                  FS, 0, 15, 0, 0, &ENS_EXT};   /* its own state is the part's memory (engine_t.mem); ~15 us a voice */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &ENSEMBLE; }

@@ -2,7 +2,7 @@
   "id": "kens",
   "name": "Ensemble",
   "long_name": "Ensemble strings",
-  "version": 1,
+  "version": 2,
   "kind": "synth",
   "license": "MPL-2.0",
   "author": "Leo Kuroshita (Hügelton Instruments)",
