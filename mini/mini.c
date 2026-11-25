@@ -385,7 +385,7 @@ static const KPluginExt MINI_EXT = {
     .presets = MINI_PRESETS, .npresets = (uint8_t)(sizeof MINI_PRESETS / sizeof MINI_PRESETS[0]),
 #endif
 };
-static const KPlugin MINI = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &MINI_DESC, &MINI_DSP,
+static const KPlugin MINI = {sizeof(KPlugin), K_PLUGIN_ABI, 3, K_PLUG_SYNTH, &MINI_DESC, &MINI_DSP,
                              FS, 0, MINI_COST, 0, 0, &MINI_EXT};
 /* ram: its state is in the parts' memory (engine_t.mem).
  * cost (MINI_COST, mini_int.h / below): one voice sounds whatever is held (mono), the rest are silent; the track's time is one

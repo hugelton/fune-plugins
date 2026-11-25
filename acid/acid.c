@@ -40,8 +40,11 @@ enum { A_WAVE, A_CUT, A_RES, A_ENV, A_DCY, A_ACC, A_TUNE, A_SLID, A_DRV, A_N };
 
 /* a voice's state beyond voice_t, found by its address (8: one a track with the host's mono cap; an older host's voices past
  * that share the least recently used) */
-enum { F_ACC = 1, F_SNAP = 2, F_GATE = 4 };
-typedef struct { const voice_t *v; int32_t rc2; uint32_t flags, used; } AcidX;
+enum { F_ACC = 1, F_SNAP = 2, F_GATE = 4, F_JOIN = 8 };
+/* alast, llast: the amplitude (Q13) and the cutoff (log2 Hz Q16) at the end of the last block; a new note struck while the voice
+ * still sounds (F_JOIN) starts its first block from them, ramping to its own across the block (0.7 ms), not in a step: its
+ * envelopes jump to the top at once, which clicked (+31 dB over 6 kHz at a retrigger, version 1) */
+typedef struct { const voice_t *v; int32_t rc2; uint32_t flags, used; int32_t alast, llast; } AcidX;
 #define ACID_NX 8
 static AcidX acid_x[ACID_NX];
 static uint32_t acid_clock;
@@ -57,7 +60,7 @@ static AcidX *acid_slot(const voice_t *v)
         if (acid_x[i].v == v) { acid_x[i].used = ++acid_clock; return &acid_x[i]; }
         if (acid_x[i].used < old->used) old = &acid_x[i];
     }
-    old->v = v; old->rc2 = 0; old->flags = F_SNAP; old->used = ++acid_clock;
+    old->v = v; old->rc2 = 0; old->flags = F_SNAP; old->used = ++acid_clock; old->alast = 0; old->llast = ACID_L_MIN;
     return old;
 }
 
@@ -71,7 +74,7 @@ static void acid_note_on(track_t *t, voice_t *v)
     v->s[0] = v->s[1] = v->s[4] = v->s[5] = v->s[6] = v->s[7] = 0;
     x->flags = (x->flags & F_GATE) | (acc ? F_ACC : 0);
     if (!v->legato) {   /* a new note: the pitch at once, both envelopes from the top (Open303's triggerNote) */
-        x->flags |= F_SNAP;
+        x->flags |= F_SNAP | (v->env_out ? F_JOIN : 0);   /* (env_out: the host's level, 0 for a voice that was silent) */
         v->s[2] = 1 << 24;
         v->s[3] = 1 << 24;
     }   /* a slide (slideToNote): the envelopes run on; the accent, the decay and the release are the new note's */
@@ -143,6 +146,12 @@ static void acid_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
         a1 = aenv1 + mulsh_32(menv1, (uint32_t)k1, 12);
         a0 >>= 11; a1 >>= 11;   /* Q13 */
     }
+    if (x->flags & F_JOIN) {   /* struck while it sounds: from where the last note was */
+        x->flags &= ~(uint32_t)F_JOIN;
+        a0 = x->alast;
+        acid_coef(&c0, x->llast, r);
+    }
+    x->alast = a1; x->llast = l1;
     v->s[2] = menv1; v->s[3] = aenv1; x->rc2 = rc21;
     x->flags = (x->flags & ~(uint32_t)F_GATE) | (gate ? F_GATE : 0);
     if (x->flags & F_SNAP) acid_live_age = 0;   /* (a new note: its sweep from the start) */
@@ -361,7 +370,7 @@ static const KPluginExt ACID_EXT = {
     sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, acid_attach, LAYOUTS, (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), acid_draw,
     ACID_PRESETS, (uint8_t)(sizeof ACID_PRESETS / sizeof ACID_PRESETS[0]),   /* its factory presets (version 2) */
 };
-static const KPlugin ACID = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &ACID_DESC, &ACID_DSP,
+static const KPlugin ACID = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &ACID_DESC, &ACID_DSP,
                              FS, sizeof acid_x + 24, 50, 0, 0, &ACID_EXT};   /* ~47 us a block on the FM-1 (fm1-emu: ~15 k instructions; README) */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &ACID; }

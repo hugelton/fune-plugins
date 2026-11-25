@@ -2,7 +2,7 @@
   "id": "macr",
   "name": "Macro",
   "long_name": "Macro oscillator",
-  "version": 2,
+  "version": 3,
   "kind": "synth",
   "license": "MIT",
   "author": "Leo Kuroshita (Hügelton Instruments)",

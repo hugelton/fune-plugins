@@ -26,6 +26,12 @@ handed out as a plugin of its own, with this folder's licence and notices.
 
 "Minimoog" and "Moog" are trademarks of their owners; Mini is not theirs, uses neither name, and copies no logo or trade dress.
 
+## Version 3 (2026-11-26)
+
+The ladder's four stages keep 256 times the input pair's resolution (8 in version 2): at the lowest cutoffs a quiet signal's step
+truncated to nothing, a stage froze, and the ladder could not start ringing from the mixer's hiss: the Whistle preset (every
+source off, the filter's own ringing) was silent. Everything else sounds as it did (the teaser's MURIYA P: -73 dB of difference).
+
 ## What the port leaves out
 
 The ladder runs at the voice's rate (CA-72's at eight times: Mini aliases more when it rings hard at high cutoffs), its input pair

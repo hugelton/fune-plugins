@@ -879,7 +879,8 @@ static void mc_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     /* the controls: HARM, TIMB (+ the host's FLT modulation, + TENV x the decay envelope), MORF (+ the host's SHP) */
     c.h = p15(p[P_E0 + E_HARM]);
     c.tm = clamp(p15(p[P_E0 + E_TIMB]) + m->cutoff + ((tenv * denv) >> 6), 0, 32767);
-    c.mo = clamp(p15(p[P_E0 + E_MORF]) + m->shape, 0, 32767);
+    c.mo = clamp(p15(p[P_E0 + E_MORF]) + m->shape - (64 << 8), 0, 32767);   /* (the host's SHP is centred on 64 << 8: none is 0 here.
+                                                                         * Version 2 added it whole: MORF sat half a turn up, its top half did nothing) */
     c.inc = m->inc; c.pitch16 = m->pitch16; c.fine = m->fine;
     c.part = mc_part(t);
     /* the gate (envelope.h LPGEnvelope, ProcessPing), its peak by the velocity: 0.4 .. 1 */
@@ -958,12 +959,13 @@ static const char *const MODELS[] = {"Pair", "Fold", "FM", "Grain", "Harm", "Wav
 /* the factory presets: a name and its settings over the defaults, in the host's factory words (presets_factory.c); the host
  * takes them through KPluginExt.presets (interface 1.5), macro_ui.c */
 static const KPreset MC_PRESETS[] = {
-    {"Soft Saw", "MODL=Pair HARM=20 TIMB=40 MORF=50 DCAY=75 COLR=60 A=0 D=60 S=100 R=30"},
-    {"Fold Bass", "MODL=Fold HARM=70 TIMB=75 MORF=35 DCAY=55 COLR=25 TENV=24 A=0 D=50 S=100 R=10"},
-    {"Bell Keys", "MODL=FM HARM=88 TIMB=62 MORF=70 DCAY=85 COLR=95 TENV=-20 A=0 D=80 S=100 R=50"},
-    {"Glass Pad", "MODL=Wave HARM=30 TIMB=50 MORF=80 DCAY=127 COLR=64 A=45 D=60 S=90 R=60 L.RATE=20 L.SHP=12"},
-    {"Organ Chord", "MODL=Chord HARM=64 TIMB=30 MORF=100 DCAY=127 LVL=90 A=3 D=60 S=100 R=35"},
-    {"Hat Noise", "MODL=Noise HARM=105 TIMB=127 MORF=60 DCAY=28 COLR=100 A=0 D=30 S=100 R=15"},
+    /* (MORF as version 2 played them: its value + 64, the top at most) */
+    {"Soft Saw", "MODL=Pair HARM=20 TIMB=40 MORF=114 DCAY=75 COLR=60 A=0 D=60 S=100 R=30"},
+    {"Fold Bass", "MODL=Fold HARM=70 TIMB=75 MORF=99 DCAY=55 COLR=25 TENV=24 A=0 D=50 S=100 R=10"},
+    {"Bell Keys", "MODL=FM HARM=88 TIMB=62 MORF=127 DCAY=85 COLR=95 TENV=-20 A=0 D=80 S=100 R=50"},
+    {"Glass Pad", "MODL=Wave HARM=30 TIMB=50 MORF=127 DCAY=127 COLR=64 A=45 D=60 S=90 R=60 L.RATE=20 L.SHP=12"},
+    {"Organ Chord", "MODL=Chord HARM=64 TIMB=30 MORF=127 DCAY=127 LVL=90 A=3 D=60 S=100 R=35"},
+    {"Hat Noise", "MODL=Noise HARM=105 TIMB=127 MORF=124 DCAY=28 COLR=100 A=0 D=30 S=100 R=15"},
 };
 
 static const engine_t MC_DSP = {
@@ -1000,7 +1002,7 @@ static const KEngine MC_DESC = {
 #define MC_COST 20u   /* us a voice a block on the FM-1 (KPlugin.cost): the light models'; the heavy ones play fewer (mc_voices) */
 #include "macro_ui.c"
 
-static const KPlugin MACRO = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &MC_DESC, &MC_DSP,
+static const KPlugin MACRO = {sizeof(KPlugin), K_PLUGIN_ABI, 3, K_PLUG_SYNTH, &MC_DESC, &MC_DSP,
                               FS, 0, MC_COST, 0, 0, &MC_EXT};   /* (its state: the voices' and the part's memory) */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &MACRO; }

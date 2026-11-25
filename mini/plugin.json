@@ -2,7 +2,7 @@
   "id": "mini",
   "name": "Mini",
   "long_name": "Mini three-oscillator synth",
-  "version": 2,
+  "version": 3,
   "kind": "synth",
   "license": "GPL-3.0-or-later",
   "author": "Leo Kuroshita (Hügelton Instruments)",

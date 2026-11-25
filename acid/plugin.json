@@ -2,7 +2,7 @@
   "id": "acid",
   "name": "Acid",
   "long_name": "Acid bass line",
-  "version": 1,
+  "version": 2,
   "kind": "synth",
   "license": "MIT",
   "author": "Leo Kuroshita (Hügelton Instruments)",

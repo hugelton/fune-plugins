@@ -35,6 +35,7 @@ enum { E_TINE, E_BARK, E_DCAY, E_TREM, E_TONE, E_BODY, E_REL, E_VEL, E_N };
 #define ATT_SHIFT 12
 #define ATT_MAX (1024 << ATT_SHIFT)     /* 16 octaves down: silence */
 #define ATT_GONE (960 << ATT_SHIFT)     /* ~ -90 dB: a released voice no longer heard */
+#define EP_FIRST (1 << 20)              /* s[7]: the note's first block to come (over the velocity's Q10, < 2^17) */
 
 /* 2^(-i/64) in Q16, i = 0 .. 63 (the first held at 65535) */
 static const uint16_t EXP2N[64] = {
@@ -87,7 +88,7 @@ static void ep_note_on(track_t *t, voice_t *v)
     v->ph[0] = v->ph[1] = v->ph[2] = 0;   /* (a retrigger puts the phases back: no step) */
     v->s[0] = v->s[1] = v->s[2] = v->s[3] = 0;
     v->s[6] = 0;
-    v->s[7] = (127 << 10) / (v->vel ? v->vel : 1);   /* the host's velocity taken back (Q10): once a note, not a block */
+    v->s[7] = ((127 << 10) / (v->vel ? v->vel : 1)) | EP_FIRST;   /* the host's velocity taken back (Q10): once a note, not a block */
 }
 
 /* the amplitude, once a control tick: the engine's decay (the damper's after the key), the tremolo, times the host's ENV 1 */
@@ -127,7 +128,9 @@ static void ep_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     int32_t lt, ai0, ai1, at, ab0, ab1, ilim, ifloor, iatt, idx, didx, gt, gb, gl, dgl, dr, bias, sb, kf, sh, post, i32;
     int32_t x1 = v->s[4], y1 = v->s[5];
     uint32_t phc = v->ph[0], phb = v->ph[2], i;
+    const int first = (v->s[7] & EP_FIRST) != 0;   /* (the note's first block) */
     if (rel && v->s[0] >= ATT_GONE) return;   /* (damped: nothing left to hear) */
+    v->s[7] &= ~EP_FIRST;
 
     /* the envelopes, once a block: the index's (fast, faster up the keys; the damper darkens it), the tine's own, the strike's */
     lt = 314 - 5 * key;
@@ -148,7 +151,9 @@ static void ep_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     iatt = (ve * (100 + tine * 3) * 258) >> 15;
     ilim = clamp(((17612 * ex2((clamp(m->pitch16, 0, 2047) * 85) >> 8)) >> 10) - 512, 0, 1024);   /* (index + 2) x pitch under
                                                                                    * ~18 kHz: 256 x 18000 over f, f by the pitch */
-    i32 = clamp(ifloor + mulq15(iatt, ai0), 0, ilim);
+    /* the first block rises from the floor to the strike, as the strike's partial rises from none: a retrigger's phases go on
+     * (the host's), and the full index and partial at once on them stepped the wave (+27 dB over 6 kHz, version 1) */
+    i32 = clamp(ifloor + (first ? 0 : mulq15(iatt, ai0)), 0, ilim);
     idx = (i32 * 20861) >> 8;                                              /* radians Q8 -> phase a unit of the modulator */
     i32 = clamp(ifloor + mulq15(iatt, ai1), 0, ilim);
     didx = (((i32 * 20861) >> 8) - idx) >> CTL_LOG2;   /* (a block is CTL long) */
@@ -161,8 +166,8 @@ static void ep_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     if (inc < BELL_LIM && tine) {
         const int32_t s = mulq15(va, tine * ve * 2), fade = clamp(((int32_t)((BELL_LIM - inc) >> 12) * 73) >> 16, 0, 16);   /* 0 at the limit, full half an octave under */
         const int32_t l0 = (mulq15(s, ab0) * fade) >> 5, l1 = (mulq15(s, ab1) * fade) >> 5;   /* (half of s at most) */
-        gl = l0;
-        dgl = (l1 - l0) >> CTL_LOG2;
+        gl = first ? 0 : l0;
+        dgl = (l1 - gl) >> CTL_LOG2;
     }
 
     /* the pickup: drive 1 .. 4x by BARK and the velocity, an offset for the asymmetry; less of both high on the keys */
@@ -172,7 +177,7 @@ static void ep_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     sh = v->note > 98 ? 2 : v->note > 90 ? 1 : 0;   /* the top keys into the clip's linear part (its odd harmonics would fold) */
     sb = softclip(bias);
     /* after it: the host's velocity taken back (it scales by vel; the sound did already by ve), the drive's gain taken back */
-    post = (v->s[7] * DRIVE_BACK[clamp((dr - 256) >> 4, 0, 48)]) >> 10;   /* Q10 */
+    post = ((v->s[7] & (EP_FIRST - 1)) * DRIVE_BACK[clamp((dr - 256) >> 4, 0, 48)]) >> 10;   /* Q10 */
     post = clamp(post, 0, 32767);
 
     for (i = 0; i < n; i++) {
@@ -333,7 +338,7 @@ static const KPreset PRESETS[] = {
 
 static const KPluginExt EP_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, 0, LAYOUTS, NW(LAYOUTS), ep_draw,
                                   PRESETS, NW(PRESETS), "E.Piano"};   /* (its full name where there is room: SDK 1.6) */
-static const KPlugin EPNO = {sizeof(KPlugin), K_PLUGIN_ABI, 1, K_PLUG_SYNTH, &EP_DESC, &EP_DSP,
+static const KPlugin EPNO = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &EP_DESC, &EP_DSP,
                              FS, sizeof trem, 20, 0, 0, &EP_EXT};   /* ~20 us a voice a block: fm1-emu, 0.84 x Retro (memos/2026-11-22_epiano.md) */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &EPNO; }

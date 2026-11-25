@@ -1,7 +1,7 @@
 # Acid
 
 A bass line synth for Fune: one voice, a saw or a square through a resonant diode-ladder style filter, an envelope that sweeps it,
-accents and slides. An outside engine plugin (id `acid`, version 1), integers only: the same C runs on the FM-1, the desktop, the
+accents and slides. An outside engine plugin (id `acid`, version 2), integers only: the same C runs on the FM-1, the desktop, the
 web and the Cardputer Zero.
 
 **Based on [Open303](https://github.com/RobinSchmidt/Open303) by Robin Schmidt** (MIT; commit 313bf0d of 2024-03-29), an
@@ -59,6 +59,12 @@ A small box of six knobs in a row (picture 1 draws the panel, the host's knobs o
 the filter's sweep (picture 0): the cutoff against the first 800 ms of a plain note (filled) and of an accented one (a line), and
 the note sounding now as a dot on its sweep. Small screens: the sweep shorter. A large screen: the sweep beside the box, EDIT's
 three knobs under it beside the track's scope. Mockups: `memos/mockups/2026-11-22_acid/`.
+
+## Version 2 (2026-11-26)
+
+A note struck while the voice still sounds (not a slide) starts its first block from the last block's amplitude and cutoff and
+ramps to its own across it (0.7 ms): its envelopes jump to the top at once, which clicked (+31 dB over 6 kHz in the 3 ms after a
+retrigger, +2.6 dB now; a note from silence +9). Nothing else changed: the slide, the accent, a note from silence bit for bit.
 
 ## Fixed point
 

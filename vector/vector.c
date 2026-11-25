@@ -30,6 +30,11 @@ typedef struct {
 } Morph;   /* 784 bytes, in the part's memory (K_PART_MEM: 2048) */
 _Static_assert(sizeof(Morph) <= K_PART_MEM, "the morphed table fits a part's memory");
 
+/* each wave's gain (Q12), so that all of them are as loud (-9 dB RMS in the table) and their fundamentals in one phase: SAW and
+ * STRING's are the others' upside down, so half-way between one of them and another the fundamental cancelled (X from SINE to
+ * SAW fell 12 dB, version 2). Under the tables' +-30000 clamp: VOX's peak goes to -1.1 dB */
+static const int16_t KV_GAIN[KV_WAVES] = {3216, -5098, 3107, 3823, 5989, 4596, -3180, 4868};
+
 static void vec_block(track_t *t)
 {
     Morph *q = part_mem ? (Morph *)part_mem(t) : 0;
@@ -60,14 +65,15 @@ static void vec_block(track_t *t)
         q->last_motion = (uint8_t)motion;
         q->last_rate = (uint8_t)rate;
     }
-    /* the bilinear weights: positive, summing to 127^2 = 16129 (near Q14) */
+    /* the bilinear weights: positive, summing to 127^2 = 16129 (near Q14); each corner's through its wave's gain (KV_GAIN) */
     weight[0] = (127 - x) * (127 - y);  /* top left, A */
     weight[1] = x * (127 - y);          /* top right, B */
     weight[2] = (127 - x) * y;          /* bottom left, C */
     weight[3] = x * y;                  /* bottom right, D */
+    for (k = 0; k < 4; k++) weight[k] = (weight[k] * KV_GAIN[w[k]]) >> 12;   /* (|16129 x 6000| < 2^27) */
     for (m = 0; m < KV_MIPS; m++) for (i = 0; i < KV_LEN; i++) {
         int32_t sum = 0;
-        for (k = 0; k < 4; k++) sum += ((int32_t)KV_TABLE[m][w[k]][i] * weight[k]) >> 14;
+        for (k = 0; k < 4; k++) sum += ((int32_t)KV_TABLE[m][w[k]][i] * weight[k]) >> 14;   /* (|32767 x 23700| < 2^30) */
         q->morphed[m][i] = (int16_t)clamp(sum, -30000, 30000);
     }
     q->x = (uint8_t)x; q->y = (uint8_t)y;
@@ -96,7 +102,7 @@ static void vec_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const v
     tab = q->morphed[mip];
     for (i = 0; i < n; i++) {
         const int32_t a = vec_lookup(tab, p0), b = vec_lookup(tab, p1);
-        out[i] += voice_amp(mulq15((a + b) >> 1, lvl), m, i);
+        out[i] += voice_amp(mulq15(a + b, lvl), m, i);   /* (the two phases' sum: +6 dB over version 2, near the others) */
         p0 += inc0;
         p1 += inc1;
     }
@@ -233,7 +239,7 @@ static const KPreset PRESETS[] = {
 static const KPluginExt VEC_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, vec_attach, LAYOUTS,
                                    (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), vec_draw, PRESETS,
                                    (uint8_t)(sizeof PRESETS / sizeof PRESETS[0])};
-static const KPlugin VECTOR = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &VEC_DESC, &VEC_DSP,
+static const KPlugin VECTOR = {sizeof(KPlugin), K_PLUGIN_ABI, 3, K_PLUG_SYNTH, &VEC_DESC, &VEC_DSP,
                                FS, 0, 8, 0, 0, &VEC_EXT};   /* its own state is the part's memory (engine_t.mem); ~8 us a voice */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &VECTOR; }

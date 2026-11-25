@@ -22,6 +22,13 @@ static void ens_attach(const KHostApi *h)
 }
 
 /* ------------------------------------------------------------------------------------------------------------- the voices --- */
+static uint32_t ens_isqrt(uint32_t x)   /* floor(sqrt(x)), once a block */
+{
+    uint32_t r = 0, b = 1u << 30;
+    while (b > x) b >>= 2;
+    while (b) { if (x >= r + b) { x -= r + b; r = (r >> 1) + b; } else r >>= 1; b >>= 2; }
+    return r;
+}
 static void ens_note_on(track_t *t, voice_t *v)
 {
     (void)t;
@@ -45,6 +52,9 @@ static void ens_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const v
     const int32_t treble = clamp(32767 + (m->cutoff >> 1), 0, 49152);
     const int32_t level = clamp(p[P_E10], 0, 127) * 258;
     const int32_t drv = clamp(p[P_E12], 0, 127), nois = clamp(p[P_E13], 0, 127) * 45;
+    /* DRV: x 1 .. 4 into the soft clip, 1 / sqrt of it out (as ACID's): it changes the sound more than the level. Version 2's
+     * x 1 .. 2.24 stayed in the clip's straight part: +6 dB and no harmonics, a second LEVEL */
+    const int32_t dg = 16 + ((drv * 48) >> 7), dcomp = drv ? (int32_t)(262144 / ens_isqrt((uint32_t)dg << 8)) : 0;   /* Q4; Q12: 4096 x 4 / sqrt(dg) */
     const int32_t vel = clamp(p[P_E15], 0, 127);
     const int32_t velc = v->vel ? (int32_t)((((127 - vel) * 127 + vel * (int32_t)v->vel) << 12) / (127 * (int32_t)v->vel)) : 4096;
     const uint32_t inc0 = m->inc >> 1, inc1 = m->inc, inc2 = m->inc << 1;
@@ -62,7 +72,7 @@ static void ens_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const v
         if (brass) s += mulq15(osc_pulse(phv, incv, 0x80000000u), brass);
         if (nois) s += mulq15((int32_t)(noise32(&nst) >> 17) - 16384, nois);
         ph0 += inc0; ph1 += inc1; ph2 += inc2; phv += incv;
-        if (drv) s = softclip(((s >> 2) * ((32768 + drv * 320) >> 2)) >> 11);
+        if (drv) s = mulsh_32(softclip((s * dg) >> 4), (uint32_t)dcomp, 12);   /* (|s| < 2^17, dg <= 64: 32 bits) */
         s = mulq15(s, level);
         if (velc != 4096) s = vel_mul(s, velc);
         out[i] += voice_amp(s, m, i);
@@ -290,7 +300,7 @@ static void ens_draw(const KDraw *g, int id, const int16_t *v, int n)
 static const KPluginExt ENS_EXT = {sizeof(KPluginExt), K_PLUGIN_EXT_VERSION, ens_attach, LAYOUTS,
                                    (uint8_t)(sizeof LAYOUTS / sizeof LAYOUTS[0]), ens_draw, PRESETS,
                                    (uint8_t)(sizeof PRESETS / sizeof PRESETS[0])};
-static const KPlugin ENSEMBLE = {sizeof(KPlugin), K_PLUGIN_ABI, 2, K_PLUG_SYNTH, &ENS_DESC, &ENS_DSP,
+static const KPlugin ENSEMBLE = {sizeof(KPlugin), K_PLUGIN_ABI, 3, K_PLUG_SYNTH, &ENS_DESC, &ENS_DSP,
                                  FS, 0, 15, 0, 0, &ENS_EXT};   /* its own state is the part's memory (engine_t.mem); ~15 us a voice */
 
 KREISEL_PLUGIN_EXPORT const KPlugin *kreisel_plugin(void) { return &ENSEMBLE; }

@@ -17,6 +17,10 @@ HOME's macros: HARM, TIMB, MORF, DCAY. Each note pings the gate; its velocity se
 the host louder). The host's FLT modulation (ENV 1, LFO) moves TIMB, its SHP modulation MORF. At its defaults the track's ENV 1 is
 a gate (`gate = 1`): the low-pass gate is the note's shape.
 
+Version 3 (2026-11-26): the host's SHP modulation is centred on 64 << 8; version 2 added it whole, so MORF sat half a turn up
+(its top half did nothing, and Pair's HARM nothing at MORF's default). The factory presets keep their sound (their MORF read as
+version 2 played it: + 64, the top at most); a song saved with Macro 2 plays its MORF half a turn lower.
+
 ## Models
 
 | # | Name | After Plaits' | HARM | TIMB | MORF |

@@ -2,7 +2,7 @@
   "id": "epno",
   "name": "E.Piano",
   "long_name": "Electric piano",
-  "version": 1,
+  "version": 2,
   "kind": "synth",
   "license": "MPL-2.0",
   "author": "Leo Kuroshita (Hügelton Instruments)",

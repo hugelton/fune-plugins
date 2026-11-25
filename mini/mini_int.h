@@ -203,6 +203,7 @@ static int32_t mi_vca(int32_t v)   /* the VCA's gain on the loudness contour's v
 }
 
 #define MI_SUB 8
+#define MI_SSH 8   /* the ladder's states over the pair's Q15: x 256 (|y| < 2^17: the states under 2^25, every m16 in 32 bits) */
 static void mi_render(MiniInt *m, int32_t *dst, uint32_t n)
 {
     int32_t vca0, vca1, vo0, vo1, base[3], node, i, j;
@@ -309,20 +310,22 @@ static void mi_render(MiniInt *m, int32_t *dst, uint32_t n)
                 p0 += inc[0]; p1 += inc[1]; p2 += inc[2];
                 /* the input pair and the loop, solved: y = top tanh((v - q y) / top) - rb, v the input less k times the stages' rest */
                 x = bus;
-                rest = m16(m16(m16(m16(s0, (uint32_t)g) + s1, (uint32_t)g) + s2, (uint32_t)g) + s3, (uint32_t)h) >> 3;   /* (the states x 8: Q18) */
+                rest = m16(m16(m16(m16(s0, (uint32_t)g) + s1, (uint32_t)g) + s2, (uint32_t)g) + s3, (uint32_t)h) >> MI_SSH;   /* (the states x 256: Q23) */
                 v = x - mulsh_32(rest, (uint32_t)k, 8) + MI_BIAS;
                 /* the loop solved as if the pair were straight (one reciprocal a sub-block), then the pair's tanh once on the input
                  * less the feedback (CA-72 solves the pair exactly, by Newton's steps: as close here on every preset, and cheaper) */
                 y = mulsh_32(v, (uint32_t)inv1q, 15);
                 a = mulsh_32(v - mulsh_32(y, (uint32_t)q, 12), (uint32_t)inv, 15);
                 y = ((softclip(a) * top) >> 15) - rb;
-                {   /* the four stages, at eight times the pair's resolution (low cutoffs move their states by less than a Q15 step) */
-                    const int32_t y8 = y * 8;
+                {   /* the four stages, at 256 times the pair's resolution: low cutoffs move their states by less than a Q15 step.
+                     * Version 2 kept them at 8 times: under ~-50 dB at the lowest cutoffs a stage's step truncated to nothing, so
+                     * it froze (a quiet tail stuck, the ladder unable to start ringing from the hiss: the Whistle preset silent) */
+                    const int32_t y8 = y * (1 << MI_SSH);
                     int32_t u = m16(y8 - s0, (uint32_t)g), o = u + s0; s0 = o + u;
                     u = m16(o - s1, (uint32_t)g); o = u + s1; s1 = o + u;
                     u = m16(o - s2, (uint32_t)g); o = u + s2; s2 = o + u;
                     u = m16(o - s3, (uint32_t)g); o = u + s3; s3 = o + u;
-                    o = mulsh_32(o >> 3, (uint32_t)pass, 15);   /* (back to Q15) */
+                    o = mulsh_32(o >> MI_SSH, (uint32_t)pass, 15);   /* (back to Q15) */
                     cy = cy - m16(cy, MI_COUPLING) + (o - cx);  /* (the output's coupling, 13 Hz) */
                     cx = o;
                 }
